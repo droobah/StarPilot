@@ -20,7 +20,7 @@ def original_mask(cp):
       return 1 << 18
     if (cp.carFingerprint == CAR.CHEVROLET_BOLT_CC_2018_2021 and word == 0x9D and
         is_bolt_present_no_acc_pedal_profile(cp) and cp.openpilotLongitudinalControl and not cp.pcmCruise):
-      return 12
+      return 28
   except (AttributeError, TypeError, ValueError, OverflowError, IndexError):
     pass
   return 0
@@ -43,7 +43,7 @@ def test_recorded_long_volt_skips_expensive_policy_but_eligible_configs_stay_liv
   for label in ('volt', 'bolt'):
     cp, _ = owner(label)
     with patch('opendbc.car.gm.aol.qualified_gm', wraps=qualified_gm) as checked:
-      assert _diagnostic_mask(cp) == (1 << 18 if label == 'volt' else 12)
+      assert _diagnostic_mask(cp) == (1 << 18 if label == 'volt' else 28)
       checked.assert_called_once_with(cp)
       cp.alternativeExperience = 0
       assert _diagnostic_mask(cp) == 0

@@ -29,11 +29,11 @@ def owner(label):
 
 
 @pytest.mark.parametrize('label', ('volt', 'bolt'))
-@pytest.mark.parametrize('mask', (0, 1 << 2, 1 << 3, 1 << 18, 12))
+@pytest.mark.parametrize('mask', (0, 1 << 2, 1 << 3, 1 << 4, 1 << 18, 12, 28))
 def test_diagnostic_receipt_does_not_invent_native_authority(label, mask):
   cp, state = owner(label)
   state = replace(state, pandaInventory=(replace(state.pandaInventory[0], faults=mask),))
-  admitted = mask == 0 or (label == 'volt' and mask == 1 << 18) or (label == 'bolt' and mask in (1 << 2, 1 << 3, 12))
+  admitted = mask == 0 or (label == 'volt' and mask == 1 << 18) or (label == 'bolt' and mask in (1 << 2, 1 << 3, 1 << 4, 12, 28))
   assert native_inventory_matches_cp(state, cp) == admitted
   accepted = current_native(sm_for(cp, state), cp, now_ns=NOW, axis_session_id='session')
   if not admitted:
@@ -48,10 +48,10 @@ def test_diagnostic_receipt_does_not_invent_native_authority(label, mask):
 
 
 @pytest.mark.parametrize('label', ('volt', 'bolt'))
-@pytest.mark.parametrize('bit', (0, 1, 4, 5, 7, 8, 15, 20, 21, 22, 23, 25, 26, 27, 31))
+@pytest.mark.parametrize('bit', (0, 1, 5, 7, 8, 15, 20, 21, 22, 23, 25, 26, 27, 31))
 def test_authority_faults_and_unknown_bits_still_block(label, bit):
   cp, state = owner(label)
-  baseline = replace(state, pandaInventory=(replace(state.pandaInventory[0], faults=(1 << 18 if label == 'volt' else 12)),))
+  baseline = replace(state, pandaInventory=(replace(state.pandaInventory[0], faults=(1 << 18 if label == 'volt' else 28)),))
   assert current_native(sm_for(cp, baseline), cp, now_ns=NOW, axis_session_id='session') == baseline
   state = replace(baseline, pandaInventory=(replace(baseline.pandaInventory[0], faults=baseline.pandaInventory[0].faults | (1 << bit)),))
   assert current_native(sm_for(cp, state), cp, now_ns=NOW, axis_session_id='session') is None
@@ -61,7 +61,7 @@ def test_authority_faults_and_unknown_bits_still_block(label, bit):
 @pytest.mark.parametrize('bad', ('rx', 'heartbeat', 'word', 'ae', 'serial', 'session', 'expired'))
 def test_diagnostic_bits_cannot_bypass_other_vetoes(label, bad):
   cp, state = owner(label)
-  slot = replace(state.pandaInventory[0], faults=(1 << 18 if label == 'volt' else 12))
+  slot = replace(state.pandaInventory[0], faults=(1 << 18 if label == 'volt' else 28))
   baseline = replace(state, pandaInventory=(slot,))
   assert current_native(sm_for(cp, baseline), cp, now_ns=NOW, axis_session_id='session') == baseline
   mutations = {'rx': {'safetyRxChecksInvalid': True}, 'heartbeat': {'heartbeatLost': True},
@@ -94,7 +94,7 @@ def test_other_bolt_generations_do_not_borrow_irq_policy(identity):
   from openpilot.starpilot.aol.panda_faults import blocking_fault_mask
   cp = params(identity, pedal=True, camera=True)
   cp.alternativeExperience = 32
-  assert blocking_fault_mask(12, cp)
+  assert blocking_fault_mask(28, cp)
 
 
 @pytest.mark.parametrize('label', ('volt', 'bolt'))
@@ -127,11 +127,13 @@ def test_raw_enum_policy_does_not_borrow_other_config_diagnostics(label):
   from openpilot.starpilot.aol.panda_faults import blocking_fault_list
   cp, _ = owner(label)
   allowed = [log.PandaState.FaultType.registerDivergent] if label == 'volt' else [
-    log.PandaState.FaultType.interruptRateCan1, log.PandaState.FaultType.interruptRateCan2]
+    log.PandaState.FaultType.interruptRateCan1, log.PandaState.FaultType.interruptRateCan2,
+    log.PandaState.FaultType.interruptRateCan3]
   assert not blocking_fault_list(allowed, cp)
   denied = (log.PandaState.FaultType.interruptRateCan1 if label == 'volt' else log.PandaState.FaultType.registerDivergent)
   assert blocking_fault_list([*allowed, denied], cp)
-  assert blocking_fault_list([*allowed, log.PandaState.FaultType.interruptRateCan3], cp)
+  if label == 'volt':
+    assert blocking_fault_list([*allowed, log.PandaState.FaultType.interruptRateCan3], cp)
   assert blocking_fault_list([*allowed, log.PandaState.FaultType.relayMalfunction], cp)
   assert blocking_fault_list([*allowed, 31], cp)
 
@@ -190,7 +192,7 @@ def test_real_native_permission_and_brake_withdrawal_remain_authoritative(label)
       assert parsed.brakePressed
       assert not mask & 2
       slot = replace(state.pandaInventory[0], controlsAllowed=bool(safety.get_controls_allowed()),
-                     faults=1 << 18 if label == 'volt' else 12)
+                     faults=1 << 18 if label == 'volt' else 28)
       receipt = replace(state, observedMonoTime=now, validUntilMonoTime=now + 200_000_000,
                         lateralAllowed=bool(mask & 1), longitudinalAllowed=bool(mask & 2),
                         requestedLateral=bool(request & 1), requestedLongitudinal=bool(request & 2),

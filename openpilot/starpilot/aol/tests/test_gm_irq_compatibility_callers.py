@@ -36,7 +36,7 @@ def snapshot(cp, now, *, kind='idle', faults=0, expired=False, session='session'
   pandas.pandaStates[0].safetyParam = config.safetyParam
   pandas.pandaStates[0].alternativeExperience = 32
   if faults:
-    pandas.pandaStates[0].faults = [name for bit, name in ((1, 'relayMalfunction'), (4, 'interruptRateCan1'), (8, 'interruptRateCan2')) if faults & bit]
+    pandas.pandaStates[0].faults = [name for bit, name in ((1, 'relayMalfunction'), (4, 'interruptRateCan1'), (8, 'interruptRateCan2'), (16, 'interruptRateCan3')) if faults & bit]
   events = messaging.new_message('onroadEvents', int(kind == 'soft'), valid=True, logMonoTime=now)
   if kind == 'soft':
     events.onroadEvents[0].name = 'commIssueAvgFreq'
@@ -56,7 +56,7 @@ def snapshot(cp, now, *, kind='idle', faults=0, expired=False, session='session'
   sm.update_msgs(now/1e9, [wire.as_reader(), pandas.as_reader(), events.as_reader(), axis.as_reader()])
   return sm
 
-@pytest.mark.parametrize("faults,admitted", [(4, True), (8, True), (12, True), (5, False), (9, False), (13, False)])
+@pytest.mark.parametrize("faults,admitted", [(4, True), (8, True), (12, True), (16, True), (28, True), (5, False), (9, False), (13, False), (17, False)])
 def test_actual_card_diagnostic_faults_preserve_only_qualified_intent(faults, admitted):
   """Real parser/Card honors the diagnostic policy; no native authority is synthesized."""
   import os
