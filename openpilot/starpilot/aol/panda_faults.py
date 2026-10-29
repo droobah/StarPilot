@@ -56,7 +56,8 @@ def _diagnostic_mask(cp):
       return 1 << 18
     if (cp.carFingerprint == CAR.CHEVROLET_BOLT_CC_2018_2021 and word == 0x9D and
         is_bolt_present_no_acc_pedal_profile(cp) and cp.openpilotLongitudinalControl and not cp.pcmCruise):
-      return (1 << 2) | (1 << 3)
+      # IRQ-rate faults latch until panda reset; a past error burst on bus 2 reports CAN3.
+      return (1 << 2) | (1 << 3) | (1 << 4)
   except (AttributeError, TypeError, ValueError, OverflowError, IndexError):
     pass
   return 0
@@ -75,6 +76,7 @@ def blocking_fault_list(faults, cp):
     allowed = _diagnostic_mask(cp)
     named = ((log.PandaState.FaultType.interruptRateCan1, 1 << 2),
              (log.PandaState.FaultType.interruptRateCan2, 1 << 3),
+             (log.PandaState.FaultType.interruptRateCan3, 1 << 4),
              (log.PandaState.FaultType.registerDivergent, 1 << 18))
     return any(not any(fault == name and allowed & bit for name, bit in named) for fault in faults)
   except (TypeError, ValueError, OverflowError):
