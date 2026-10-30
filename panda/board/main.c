@@ -81,6 +81,7 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
       break;
   }
   can_init_all();
+  reapply_power_save_can();
 }
 
 bool is_car_safety_mode(uint16_t mode) {
