@@ -63,3 +63,4 @@ extern volatile bool stop_mode_requested;
 #endif
 
 void set_power_save_state(bool enable);
+void reapply_power_save_can(void);

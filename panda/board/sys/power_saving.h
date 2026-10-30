@@ -25,20 +25,24 @@ void enable_can_transceivers(bool enabled) {
   }
 }
 
+static void disable_power_save_can_irqs(void) {
+  if (harness.status == HARNESS_STATUS_FLIPPED) {
+    llcan_irq_disable(cans[0]);
+  } else {
+    llcan_irq_disable(cans[2]);
+  }
+  #ifndef PANDA_HKG_REMOTE_START
+  llcan_irq_disable(cans[1]);
+  #endif
+}
+
 void set_power_save_state(bool enable) {
   if (enable != power_save_enabled) {
     if (enable) {
       print("enable power savings\n");
 
       // Disable CAN interrupts
-      if (harness.status == HARNESS_STATUS_FLIPPED) {
-        llcan_irq_disable(cans[0]);
-      } else {
-        llcan_irq_disable(cans[2]);
-      }
-      #ifndef PANDA_HKG_REMOTE_START
-      llcan_irq_disable(cans[1]);
-      #endif
+      disable_power_save_can_irqs();
     } else {
       print("disable power savings\n");
 
@@ -58,6 +62,16 @@ void set_power_save_state(bool enable) {
     }
 
     power_save_enabled = enable;
+  }
+}
+
+// can_init_all() re-enables every CAN IRQ. While power saving, the non-main
+// controllers would then decode their disabled transceivers, fault on the error
+// interrupt rate and latch it, so restore the power save CAN state afterwards.
+void reapply_power_save_can(void) {
+  if (power_save_enabled) {
+    disable_power_save_can_irqs();
+    enable_can_transceivers(false);
   }
 }
 
