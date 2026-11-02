@@ -1226,6 +1226,12 @@ class SelfdriveD:
       alerts.append(notification)
     if not recovery.monitor.visible(now_ns):
       clear_event_types.add(RADAR_RECOVERY_EVENT)
+    from openpilot.starpilot.car.external_radar.notifications import ExternalRadarNotification
+    if not hasattr(self, 'external_radar_notification'):
+      self.external_radar_notification = ExternalRadarNotification()
+    external_radar_alert = self.external_radar_notification.update(self.sm, now_ns=now_ns)
+    if external_radar_alert is not None:
+      alerts.append(external_radar_alert)
     # A cold/unarmed fault classification is not a pause of expected steering.
     # Qualified availability retention already carries both fields even while
     # ordinary cruise is disabled; this only selects its presentation.
@@ -1258,6 +1264,7 @@ class SelfdriveD:
         selected.audible_alert == log.SelfdriveState.AudibleAlert.prompt),
       requested_until_ns=getattr(self, 'aol_availability_chime_until_ns', 0))
     recovery.selected(self.AM.current_alert)
+    self.external_radar_notification.selected(self.AM.current_alert)
 
   def ordinary_source_availability(self, CS, now_ns, native=None):
     """Classify lost host source; never renew a command or change engagement."""
