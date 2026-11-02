@@ -18,7 +18,7 @@
       },
       "new_storage": {
         "dataWordCount": 3,
-        "pointerCount": 6,
+        "pointerCount": 7,
         "preferredListEncoding": "inlineComposite",
         "isGroup": false,
         "discriminantCount": 0,
@@ -63,6 +63,26 @@
           "discriminantValue": 65535,
           "ordinal": {
             "explicit": 38
+          }
+        },
+        {
+          "slot": {
+            "offset": 6,
+            "type": {
+              "struct": {
+                "typeId": 17216026177189674117
+              }
+            },
+            "defaultValue": {
+              "schemaValueHex": "00000000040000000000000002000100100000000000000000000000000000000000000000000000"
+            },
+            "hadExplicitDefault": false
+          },
+          "name": "externalRadar",
+          "codeOrder": 39,
+          "discriminantValue": 65535,
+          "ordinal": {
+            "explicit": 39
           }
         }
       ]
@@ -656,7 +676,8 @@
   },
   "published_addition_commits": {
     "slc": "ab8368f287b78b42f8590722878c7d5834609e19",
-    "flm": "b151ca11cb4d88f32d7adfdbcff50baf29f4fbbc"
+    "flm": "b151ca11cb4d88f32d7adfdbcff50baf29f4fbbc",
+    "external_radar": "0e145af633efadc5dbd5f63a3d46485e3ad2606f"
   },
-  "review_basis": "Published SLC and FLM append-only changes. Every incumbent compiled field descriptor and enum prefix was independently checked unchanged; only the exact seven typed deltas below are permitted."
+  "review_basis": "Published SLC and FLM append-only changes. Every incumbent compiled field descriptor and enum prefix was independently checked unchanged; only the exact seven typed deltas below are permitted. externalRadar (StarPilotCarState @39) is a later append-only pointer field for the add-on radar status."
 }
