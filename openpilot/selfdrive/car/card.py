@@ -268,7 +268,10 @@ class Car:
         with car.CarParams.from_bytes(cached_params_raw) as _cached_params:
           cached_params = _cached_params
 
+      startup_fingerprints = {}
+
       def pre_create_hook(cp, candidate, fingerprints, car_fw):
+        startup_fingerprints.update(fingerprints)
         initialize_aol_preference(cp)
         if candidate == HYUNDAI_CAR.HYUNDAI_IONIQ_6:
           # This decision must precede CarInterface parser/controller construction
@@ -307,6 +310,9 @@ class Car:
                         pre_create_hook=pre_create_hook,
                         forced_candidate=startup_candidate(self.params, developer_fingerprint=bool(os.getenv('FINGERPRINT'))))
       self.RI = interfaces[self.CI.CP.carFingerprint].RadarInterface(self.CI.CP)
+      from openpilot.starpilot.car.external_radar.runtime import install as install_external_radar
+      self.RI, self.external_radar = install_external_radar(self.RI, self.CI.CP, self.params, startup_fingerprints,
+                                                            enabled=openpilot_enabled_toggle)
       self.CP = self.CI.CP
 
       # continue onto next fingerprinting step in pandad
@@ -316,6 +322,7 @@ class Car:
       if RI is None:
         raise ValueError('explicit car interface requires a radar interface')
       self.RI = RI
+      self.external_radar = None
 
     self.volt_cc_selected = gm_cc_transport_required(self.CP)
     self.volt_cc_boot_offset_ns = None
@@ -1137,6 +1144,11 @@ class Car:
         companion = messaging.new_message('starpilotCarState', valid=bool(cs_send.valid), logMonoTime=int(cs_send.logMonoTime))
       companion.starpilotCarState.sourceCarStateMonoTime = int(cs_send.logMonoTime)
       self.v_cruise_helper.toyota.publish(companion.starpilotCarState.toyotaCruise)
+    if getattr(self, 'external_radar', None) is not None:
+      if companion is None:
+        companion = messaging.new_message('starpilotCarState', valid=bool(cs_send.valid), logMonoTime=int(cs_send.logMonoTime))
+      companion.starpilotCarState.sourceCarStateMonoTime = int(cs_send.logMonoTime)
+      self.external_radar.write(companion.starpilotCarState.externalRadar)
     self.car_gps_publisher.update(self.CI.CS, self.pm, companion)
     self.pm.send('carState', cs_send)
     if getattr(self, 'learning_stamp_observer', None) is not None:

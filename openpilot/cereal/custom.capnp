@@ -216,6 +216,19 @@ struct StarPilotCarState @0xf35cc4560bbf6ec2 {
   feedbackPublication @37 :FeedbackPublication;
   steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo;
   toyotaCruise @38 :ToyotaCruise;
+  externalRadar @39 :ExternalRadar;
+
+  struct ExternalRadar {
+    status @0 :Status;
+    faultReason @1 :FaultReason;  # the last fault; kept through recovery and when disabled
+    faultCount @2 :UInt8;  # fallback episodes this drive; enough of them disable the radar until restart
+    passive @3 :Bool;  # decoded and health-checked, never sent to radard
+    objectCount @4 :UInt8;  # objects in the last complete radar cycle, before filtering
+    blockedReason @5 :Text;  # why a configured radar was not started
+
+    enum Status { off @0; blocked @1; searching @2; active @3; fallback @4; disabled @5; }
+    enum FaultReason { none @0; cycleTimeout @1; stateTimeout @2; sensorIdMismatch @3; }
+  }
 
   struct ToyotaCruise {
     version @0 :UInt16;
