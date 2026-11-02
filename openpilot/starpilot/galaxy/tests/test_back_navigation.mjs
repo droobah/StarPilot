@@ -134,3 +134,13 @@ assert.equal(route.view.searchPage, '')
 const searchAgain = SettingsPage.setup(searchProps)
 assert.equal(searchAgain.restoredPage, undefined, 'a new search after returning to Toggles starts at its requested page')
 console.log('Settings entry, fresh values, search isolation and scroll restoration passed')
+
+// A sub-page whose feature was removed returns to its parent; a top page or a page with rows stays.
+const emptied = { initialPage: "vehicle", calls: 0, back() { this.calls++ } }
+const onData = SettingsPage.watch["state.data"]
+onData.call(emptied, { page: "vehicle/external_radar", rows: [] })
+assert.equal(emptied.calls, 1)
+onData.call(emptied, { page: "vehicle/external_radar", rows: [{ label: "Mode" }] })
+onData.call(emptied, { page: "vehicle", rows: [] })
+onData.call(emptied, null)
+assert.equal(emptied.calls, 1)

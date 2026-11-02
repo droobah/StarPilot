@@ -61,6 +61,7 @@ from openpilot.starpilot.ui.gm_tune_feature import GmTuneFeature, GmTruckFeature
 from openpilot.starpilot.car.gm.tune_preferences import KEY as GM_TUNE_KEY
 from openpilot.starpilot.car.gm.radar_recovery import KEY as RADAR_RECOVERY_KEY
 from openpilot.starpilot.ui.volt_radar_feature import VoltRadarFeature
+from openpilot.starpilot.ui.external_radar_feature import ExternalRadarFeature, KEYS as EXTERNAL_RADAR_KEYS
 from openpilot.starpilot.ui.panda_wake_feature import PandaWakeFeature
 from openpilot.starpilot.panda_wake import KEYS as PANDA_WAKE_KEYS
 from openpilot.starpilot.saved_document import commit_exact
@@ -174,6 +175,7 @@ class FeatureSettingsOwner:
     self.gm_truck = GmTruckFeature(self)
     self.gm_ev_preset = GmEvPresetFeature(self)
     self.volt_radar = VoltRadarFeature(self, galaxy=galaxy)
+    self.external_radar = ExternalRadarFeature(self, galaxy=galaxy)
     self.panda_wake = PandaWakeFeature(self, galaxy=galaxy)
     self.traffic_profiles = TrafficFeature(self)
     self.lane_changes = LaneChangeFeature(params, authority, vehicle_fingerprint, self.vehicle_params,
@@ -849,7 +851,8 @@ class FeatureSettingsOwner:
           self._gm_stop_capability("GMAutoHold") is not None or self.tesla_screen.capability() is not None or self.tesla_coop.capability() is not None or
           self.gm_tune.capability() is not None or self.gm_truck.capability() is not None or
           self.gm_ev_preset.capability() is not None or self.volt_radar.capability() is not None or
-          self.panda_wake.capability() is not None or preap_radar_capability(self.vehicle_params()) is not None):
+          self.panda_wake.capability() is not None or preap_radar_capability(self.vehicle_params()) is not None or
+          self.external_radar.capability() is not None):
         rows.append(FeatureRow("", "Vehicle Settings", "Configure features supported by your vehicle", page=FeaturePage.VEHICLE, available=True))
       rows.append(FeatureRow("", "Driving Personalities", "Adjust Aggressive, Standard, Relaxed and Traffic profiles",
                              page=FeaturePage.PERSONALITIES, available=True))
@@ -898,6 +901,7 @@ class FeatureSettingsOwner:
       rows.extend(self.gm_truck.rows(parked))
       rows.extend(self.gm_ev_preset.rows(parked))
       rows.extend(self.volt_radar.rows())
+      rows.extend(self.external_radar.entry())
       rows.extend(row for row in self.panda_wake.rows(parked) if row.key != "IgnoreIgnitionLine")
       pedal_capability = self._pedal_setup_capability()
       if pedal_capability is not None:
@@ -1025,6 +1029,9 @@ class FeatureSettingsOwner:
                              reason="" if learning.resettable else "No saved learning" if learning.valid and not learning.has_samples else
                                     "Park to reset saved learning" if not parked else "Saved learning is currently in use",
                              vehicle_fingerprint=self.vehicle_fingerprint(), dependencies=learning.sources))
+    elif page == FeaturePage.EXTERNAL_RADAR:
+      title = "External Radar"
+      rows.extend(self.external_radar.rows())
     elif page == FeaturePage.BLUEPILOT:
       title = "BluePilot Controller Options"
       rows.extend(FordBluePilotFeature(self).rows(parked, options=True))
@@ -1321,6 +1328,8 @@ class FeatureSettingsOwner:
     subtitle = (
         "Configure features supported by this vehicle. Restart requirements are shown with each setting."
         if page == FeaturePage.VEHICLE else
+        "Experimental. Set up an add-on Nanoradar MR76 while parked; changes apply after restart."
+        if page == FeaturePage.EXTERNAL_RADAR else
         "Configure automatic Chill and Experimental switching."
         if page in (
             FeaturePage.CONDITIONAL,
@@ -1383,6 +1392,8 @@ class FeatureSettingsOwner:
       return self.preap_radar.apply(request)
     if key == "TeslaCoopSteering":
       return self.tesla_coop.apply(request)
+    if key in EXTERNAL_RADAR_KEYS:
+      return self.external_radar.apply(request)
     if key in TESLA_SCREEN_KEYS:
       return self.tesla_screen.apply(request)
     if key == GM_TUNE_KEY:

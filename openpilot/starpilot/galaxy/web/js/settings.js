@@ -306,6 +306,10 @@ export const SettingsPage = {
     },
   },
   watch: {
+    "state.data"(data) {
+      // A sub-page whose feature was just removed (such as External Radar's Remove Setup) has nothing left to show.
+      if (data && data.page !== this.initialPage && Array.isArray(data.rows) && !data.rows.length) this.back()
+    },
     "state.pending"() { this.flushSoundChoices() },
     "state.status"(status, previous) {
       if (previous === "saving" && status === "ready") this.state.soundChoicesDirty = false
