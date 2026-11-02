@@ -151,3 +151,38 @@ The Subaru angle implementation includes work from Jacob Waller's `jul-angle-bas
 The historical tuning formerly in `openpilot/starpilot/car/ford/starpilot_tuning.py` included the BluePilot bp-7.0-derived work identified in [CREDITS.md](CREDITS.md#starpilot-ford-demand-tuning). The published upstream license notices retained above and in the pinned BluePilot library remain applicable to the adapted source. StarPilot's separate protocol adapter does not modify those notices or resolve their scope.
 
 The angle-primary adaptation in `openpilot/starpilot/car/ford/starpilot_controller.py` is derived from BluePilot v0.2.1. It retains the complete MIT copyright and permission notice in `opendbc_repo/opendbc/bluepilot_lateral/LICENSE`, including Comma.ai, BluePilot and StarPilot contributors. See the contributor attribution in `CREDITS.md`.
+
+## Nanoradar MR76 protocol layout
+
+The MR76 DBC generator and its tests follow the message layouts and example frames documented by MR76_Radar (`2b5d1671360fad5bb5dd8c0cf6403cdc59801dd3`); see [CREDITS.md](CREDITS.md#nanoradar-mr76-external-radar). No driver code is copied. Its notice:
+
+```text
+BSD 3-Clause License
+
+Copyright (c) 2026, [Morad Sayed](https://github.com/MoradSayed)
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
