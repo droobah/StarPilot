@@ -46,6 +46,7 @@ def is_long_confirm_action(key: str) -> bool:
 class FeaturePage(StrEnum):
   HUB = "hub"
   VEHICLE = "vehicle"
+  EXTERNAL_RADAR = "vehicle/external_radar"
   SLC = "slc"
   LANE = "lane"
   LANE_CHANGE = "lane_change"
@@ -73,8 +74,10 @@ SLC_OFFSET_KEYS = tuple(f"slc:offset:{index}" for index in range(1, 8))
 LANE_CHANGE_CONFIRM_ACTIONS = frozenset(("lane_change:reset",))
 CURVE_CONFIRM_ACTIONS = frozenset(("curve_reset",))
 CONDITIONAL_CONFIRM_ACTIONS = frozenset(("conditional:reset", "conditional:manual_reset"))
+EXTERNAL_RADAR_CONFIRM_ACTIONS = frozenset(("external_radar:remove",))
 FEATURE_CONFIRM_ACTIONS = (TORQUE_CONFIRM_ACTIONS | SLC_CONFIRM_ACTIONS | LANE_CHANGE_CONFIRM_ACTIONS |
-                           CURVE_CONFIRM_ACTIONS | CONDITIONAL_CONFIRM_ACTIONS | {"reset_profiles", "pip:reset", "sentry:reset"})
+                           CURVE_CONFIRM_ACTIONS | CONDITIONAL_CONFIRM_ACTIONS | EXTERNAL_RADAR_CONFIRM_ACTIONS |
+                           {"reset_profiles", "pip:reset", "sentry:reset"})
 
 
 HEADING_PREFIX = "heading:"

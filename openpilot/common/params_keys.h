@@ -341,6 +341,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"NAPPedalEnabled", {PERSISTENT, BOOL, "0"}},
     {"TeslaPreAPRadarConfig", {PERSISTENT, JSON}},
     {"ExternalRadarConfig", {PERSISTENT, JSON}},
+    {"ExternalRadarSetup", {PERSISTENT, BOOL, "0"}},
     {"NAPRadarOffset", {PERSISTENT, FLOAT, "0.0"}},
     {"NAPPedalCalibDone", {PERSISTENT, BOOL, "0"}},
     {"NAPPedalCanBus", {PERSISTENT, INT, "2"}},

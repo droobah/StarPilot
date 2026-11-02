@@ -7,6 +7,8 @@ from openpilot.starpilot.ui.calibration_reset import calibration_reset
 from openpilot.starpilot.saved_document import commit_exact
 from openpilot.starpilot.saved_source import read_saved
 from openpilot.starpilot.system.starport import new_setup
+from openpilot.starpilot.ui.external_radar_feature import (SETUP_DESCRIPTION as EXTERNAL_RADAR_DESCRIPTION, SETUP_KEY as EXTERNAL_RADAR_KEY,
+                                                          SETUP_LOCKED_REASON as EXTERNAL_RADAR_LOCKED, setup_saved as external_radar_saved)
 from openpilot.starpilot.ui.feature_settings_state import HEADING_PREFIX, FeatureRow, FeatureSettingsState
 
 
@@ -73,6 +75,15 @@ class DeveloperSettingsOwner:
                      raw, ("Off", "On") if valid else (), available=parked and valid,
                      reason=(DESCRIPTION if parked else "Park the vehicle to change this setting.") if valid else
                             "Invalid saved value", default_value="Off")
+    radar_raw, radar_readable = read_saved(self.params, EXTERNAL_RADAR_KEY, 8)
+    radar_valid = radar_readable and radar_raw in (None, b"0", b"1")
+    radar_locked = external_radar_saved(self.params)
+    radar_row = FeatureRow(EXTERNAL_RADAR_KEY, "External Radar Setup",
+                           ("On" if radar_raw == b"1" or radar_locked else "Off") if radar_valid else "Invalid saved value",
+                           radar_raw, ("Off", "On") if radar_valid else (), available=parked and radar_valid and not radar_locked,
+                           reason=(EXTERNAL_RADAR_LOCKED if radar_locked else EXTERNAL_RADAR_DESCRIPTION if parked else
+                                   "Park the vehicle to change this setting.") if radar_valid else "Invalid saved value",
+                           default_value=None if radar_locked else "Off")
     rhd_raw, rhd_readable = read_saved(self.params, "IsRhdDetected", 8)
     reset_available = self._driver_monitoring_reset_allowed() and rhd_readable
     reset_reason = (DRIVER_MONITORING_RESET_DESCRIPTION if reset_available else
@@ -91,7 +102,7 @@ class DeveloperSettingsOwner:
     starport_rows = self._starport_rows(parked)
     summary = "Changes apply next drive. Panda firmware changes require a device restart." if firmware_rows else "Changes apply next drive."
     return FeatureSettingsState("developer", "Developer driving options", summary,
-                                (row, reset_row, calibration_row, *firmware_rows, *starport_rows), parked)
+                                (row, radar_row, reset_row, calibration_row, *firmware_rows, *starport_rows), parked)
 
   def apply(self, request):
     if request.key == CALIBRATION_RESET:
@@ -122,10 +133,13 @@ class DeveloperSettingsOwner:
       return self._apply_starport(request, "allow_hevc", "set_allow_hevc")
     if request.key == STARPORT_NEW_SETUP_KEY:
       return self._apply_new_setup(request)
-    if request.key != KEY or request.value not in ("Off", "On") or request.expected not in (None, b"0", b"1"):
+    if request.key not in (KEY, EXTERNAL_RADAR_KEY) or request.value not in ("Off", "On") or request.expected not in (None, b"0", b"1"):
+      return False
+    if request.key == EXTERNAL_RADAR_KEY and external_radar_saved(self.params):
       return False
     result = commit_exact(self.params, key=request.key, max_bytes=8, raw=b"1" if request.value == "On" else b"0",
-                          expected=request.expected, authorized=self.authorized, temp_prefix=".voacc-")
+                          expected=request.expected, authorized=self.authorized,
+                          temp_prefix=".voacc-" if request.key == KEY else ".external-radar-setup-")
     return result.committed and result.verified
 
   def _apply_starport(self, request, field, command):

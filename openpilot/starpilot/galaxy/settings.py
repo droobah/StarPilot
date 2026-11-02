@@ -39,7 +39,7 @@ from openpilot.starpilot.ui.sentry_owner import RESET as SENTRY_RESET, SentryOwn
 from openpilot.starpilot.ui.vasm_owner import ANNOTATION as VASM_ANNOTATION, RESET as VASM_RESET, VASMOwner, validated_annotation
 
 
-PAGES = frozenset(("hub", "localization", "developer", "vehicle", "slc", "lane", "lane_change", "profiles", "personalities",
+PAGES = frozenset(("hub", "localization", "developer", "vehicle", "vehicle/external_radar", "slc", "lane", "lane_change", "profiles", "personalities",
                    "traffic", "aggressive", "standard", "relaxed",
                    "curve", "torque", "tuning", "torque/bluepilot", "aol", "wheel", "appearance", "display", "data", "power", "sounds", "pip", "sentry", "vasm",
                    "conditional", "conditional/cem", "conditional/ccm",
@@ -148,7 +148,7 @@ def _onroad_preference(page: str, key: str) -> bool:
   # multi-key reset/repair operations need the offroad transaction boundary;
   # their owners independently recheck that requirement at commit time.
   return bool(page not in ("developer", "power") and key and key != SETUP_ACTION and key not in (
-    "IsRhdDetected", "AlphaLongitudinalEnabled", "reset_profiles", "curve_reset", "slc_reset",
+    "IsRhdDetected", "AlphaLongitudinalEnabled", "reset_profiles", "curve_reset", "slc_reset", "external_radar:remove",
     "conditional:reset", "conditional:manual_reset",
   ) and not is_long_confirm_action(key) and not key.startswith("torque_repair:"))
 
@@ -452,6 +452,9 @@ def _question(row: FeatureRow, request: FeatureSettingsRequest) -> str:
     return f"Reset speed-limit offsets to zero? {row.value}. Saved control may resume if its switch is on."
   if key == "curve_reset":
     return "Erase learned curve data? Curve Speed Controller keeps its current On or Off choice."
+  if key == "external_radar:remove":
+    return ("Delete the saved External Radar setup (mode, wiring, offsets and filters) and turn off External Radar Setup? " +
+            "The radar stops being used after restart.")
   if key.startswith("conditional:"):
     return conditional_question(request, row.label, row.unit)
   if key == "reset_profiles":
