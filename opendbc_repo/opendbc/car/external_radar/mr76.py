@@ -91,7 +91,8 @@ class _Decoder:
 
 
 class MR76RadarInterface(RadarInterfaceBase):
-  def __init__(self, CP, config: MR76Config):
+  def __init__(self, CP, config: MR76Config, occupied: frozenset[int] = frozenset()):
+    """occupied: addresses the car already sends on config.bus, never taken as another sensor ID's radar."""
     super().__init__(CP)
     self.config = config
     self.decoder = _Decoder(config.sensor_id)
@@ -99,7 +100,7 @@ class MR76RadarInterface(RadarInterfaceBase):
     self.header_addr = address(OBJ_LIST_STATUS, config.sensor_id)
     self.object_addr = address(OBJ_GENERAL, config.sensor_id)
     self.version_addr = address(SW_VERSION, config.sensor_id)
-    self.foreign_header_addrs = {address(OBJ_LIST_STATUS, i) for i in SENSOR_IDS if i != config.sensor_id}
+    self.foreign_header_addrs = {address(OBJ_LIST_STATUS, i) for i in SENSOR_IDS if i != config.sensor_id} - occupied
 
     yaw = math.radians(config.yaw_deg)
     self.cos_yaw, self.sin_yaw = math.cos(yaw), math.sin(yaw)
