@@ -91,7 +91,7 @@ def test_defaults_shown_without_a_saved_setup(params):
   opt_in(params)
   rows = radar_rows(owner(params))
   values = {key.removeprefix(PREFIX): row.value for key, row in rows.items()}
-  assert values == {"mode": "Off", "bus": "1", "sensor_id": "2", "long_offset": "0", "lat_offset": "0", "yaw_deg": "0",
+  assert values == {"mode": "Off", "bus": "1", "sensor_id": "0", "long_offset": "0", "lat_offset": "0", "yaw_deg": "0",
                     "upside_down": "Off", "max_lat": "6", "rcs_min": "0", "rcs_max": "30", "drop_oncoming": "On", "max_objects": "64"}
   assert all(row.available and row.default_value == row.value for row in rows.values())
   assert rows[PREFIX + "long_offset"].minimum == -3.0 and rows[PREFIX + "long_offset"].maximum == 1.0
