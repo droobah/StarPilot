@@ -45,7 +45,7 @@ class FaultReason(StrEnum):
 @dataclass(frozen=True)
 class MR76Config:
   bus: int = 1
-  sensor_id: int = 2
+  sensor_id: int = 0  # the factory setting, so a new radar works without reconfiguring
   long_offset: float = 0.0  # m from the front bumper to the radar; negative means behind the bumper
   lat_offset: float = 0.0  # m, positive when the radar is left of the car's centerline
   yaw_deg: float = 0.0  # positive when the radar points left of straight ahead
