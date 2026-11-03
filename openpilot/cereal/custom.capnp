@@ -216,7 +216,7 @@ struct StarPilotCarState @0xf35cc4560bbf6ec2 {
   feedbackPublication @37 :FeedbackPublication;
   steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo;
   toyotaCruise @38 :ToyotaCruise;
-  externalRadar @39 :ExternalRadar;
+  externalRadar @40 :ExternalRadar;
 
   struct ExternalRadar {
     status @0 :Status;
