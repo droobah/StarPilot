@@ -54,7 +54,7 @@ def test_bolt_powertrain_bus_only_leaves_sensor_id_2(bolt):
 def test_car_traffic_at_another_sensor_id_is_not_taken_for_a_radar():
   # A car module sending 0x60A on the radar's bus must not trigger the sensor-ID mismatch.
   packer = CANPacker(dbc_name(0))
-  fingerprints = {1: {0x60A: 8}}
+  fingerprints = {1: {0x60A: 8, 0x123: 8}}
   for occupied, expected in ((occupied_addresses(fingerprints, 1), RadarStatus.searching), (frozenset(), RadarStatus.disabled)):
     ri = MR76RadarInterface(structs.CarParams(), MR76Config(sensor_id=2), occupied)
     for tick in range(1, 40):
@@ -79,10 +79,52 @@ def test_a_car_module_on_a_radar_input_still_collides_with_the_radar_present():
   assert mr76_collisions(radar_cycle(2, {0x220: 8}), 1, 2) == ((0x220, "RadarCfg (radar input)"),)
 
 
-def test_one_matching_address_is_car_traffic_not_a_radar():
-  assert radar_sensor_ids({1: {0x62A: 8}}, 1) == frozenset()
-  assert radar_sensor_ids({1: {0x62A: 8, 0x62B: 5}}, 1) == frozenset()
-  assert mr76_collisions({1: {0x62A: 8}}, 1, 2) == ((0x62A, "ObjListStatus"),)
+def test_one_matching_address_among_car_traffic_is_not_a_radar():
+  assert radar_sensor_ids({1: {0x62A: 8, 0x123: 8}}, 1) == frozenset()
+  assert radar_sensor_ids({1: {0x62A: 8, 0x62B: 5, 0x123: 8}}, 1) == frozenset()
+  assert mr76_collisions({1: {0x62A: 8, 0x123: 8}}, 1, 2) == ((0x62A, "ObjListStatus"),)
+
+
+# What a real MR76 (firmware 2.0.5, sensor ID 0) sent over its first seconds after power-on.
+EMPTY_FIRST_CYCLES = {0x60A: 8}
+BOOT_BURST = {0x60A: 8, 0x400: 8, 0x401: 8, 0x403: 8, 0x404: 8, 0x405: 8, 0x406: 8}
+RUNNING = {**BOOT_BURST, 0x60B: 8, 0x201: 8, 0x700: 8}
+
+
+@pytest.mark.parametrize("seen", (EMPTY_FIRST_CYCLES, BOOT_BURST, RUNNING))
+def test_a_radar_starting_up_during_fingerprinting_does_not_block_itself(seen):
+  assert radar_sensor_ids({1: seen}, 1) == {0}
+  assert mr76_collisions({1: seen}, 1, 0) == ()
+  assert occupied_addresses({1: seen}, 1) == frozenset()
+
+
+@pytest.mark.parametrize("heard", (0x60B, 0x201, 0x700))
+def test_a_radar_is_recognized_on_a_bus_shared_with_the_car(heard):
+  fingerprints = {0: {0x123: 8, 0x60A: 8, heard: 8}}
+  assert radar_sensor_ids(fingerprints, 0) == {0}
+  assert occupied_addresses(fingerprints, 0) == {0x123}
+
+
+def test_a_radar_at_id_0_on_a_pedal_bus_still_collides():
+  # The pedal's commands on 0x200 would reconfigure the radar.
+  fingerprints = {0: {0x200: 6, 0x201: 6, 0x123: 8, 0x60A: 8, 0x60B: 8}}
+  assert mr76_collisions(fingerprints, 0, 0) == ((0x200, "RadarCfg (radar input)"),)
+
+
+def test_pedal_alone_on_the_bus_blocks_id_0():
+  # A bus of only MR76-shaped addresses but no list header is not a radar.
+  fingerprints = {0: {0x200: 6, 0x201: 6}}
+  assert radar_sensor_ids(fingerprints, 0) == frozenset()
+  assert {addr for addr, _ in mr76_collisions(fingerprints, 0, 0)} == {0x200, 0x201}
+
+
+def test_a_lone_header_at_another_sensor_id_on_a_silent_bus_is_a_mismatch():
+  fingerprints = {1: {0x60A: 8}}
+  packer = CANPacker(dbc_name(0))
+  ri = MR76RadarInterface(structs.CarParams(), MR76Config(sensor_id=2), occupied_addresses(fingerprints, 1))
+  for tick in range(1, 40):
+    ri.update([(tick * 10_000_000, [packer.make_can_msg("ObjListStatus", 1, {"NofObjects": 0})])])
+  assert (ri.status, ri.fault) == (RadarStatus.disabled, FaultReason.sensorIdMismatch)
 
 
 def test_a_radar_seen_at_another_sensor_id_at_startup_is_still_a_mismatch():

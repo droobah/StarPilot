@@ -53,7 +53,7 @@ class MR76Config:
   max_lat: float = 6.0
   rcs_min: float = 0.0
   rcs_max: float = 30.0
-  drop_oncoming: bool = True
+  drop_oncoming: bool = False  # the radar has no speed input, so on the road this may also catch slower leads
   max_objects: int = 64
   publish_points: bool = True  # False keeps decoding and health for a passive drive without influencing radard
 

@@ -107,7 +107,7 @@ DESCRIPTIONS = {
   'external_radar:max_lat': 'Ignores objects farther than this to either side of the car.',
   'external_radar:rcs_min': 'Ignores weak reflections below this strength, such as road clutter.',
   'external_radar:rcs_max': 'Ignores reflections above this strength, such as large roadside structures.',
-  'external_radar:drop_oncoming': 'Ignores objects the radar reports as moving toward the car.',
+  'external_radar:drop_oncoming': 'Ignores objects the radar reports as moving toward it. This may also hide slower cars ahead.',
   'external_radar:max_objects': 'Uses at most this many objects from each radar cycle.',
   'external_radar:remove': 'Deletes these settings and turns off External Radar Setup in Developer.',
   'CameraView': 'Chooses the camera view shown on the driving screen.',

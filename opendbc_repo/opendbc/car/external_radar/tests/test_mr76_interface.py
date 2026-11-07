@@ -124,7 +124,7 @@ def test_incomplete_cycle_is_not_published():
 
 
 def test_filters():
-  sim = Sim(MR76Config(max_lat=3.0, rcs_min=0.0, rcs_max=30.0, max_objects=4))
+  sim = Sim(MR76Config(max_lat=3.0, rcs_min=0.0, rcs_max=30.0, max_objects=4, drop_oncoming=True))
   sim.objects = [
     {**OBJ, "ID": 1},
     {**OBJ, "ID": 2, "DynProp": 2},  # oncoming
@@ -132,6 +132,13 @@ def test_filters():
     {**OBJ, "ID": 4, "DistLat": 4.0},
     {**OBJ, "ID": 6},  # beyond max_objects
   ]
+  assert len(sim.run(20).points) == 1
+
+
+def test_oncoming_objects_are_kept_by_default():
+  # The radar has no speed input, so on the road a slower lead may be reported as oncoming.
+  sim = Sim()
+  sim.objects = [{**OBJ, "DynProp": 2}]
   assert len(sim.run(20).points) == 1
 
 
