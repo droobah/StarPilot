@@ -22,14 +22,15 @@ Every MR76 address moves by `0x10` × its sensor ID (0–7). A new radar ships a
 
 ### Changing it on the bench
 
-Do this before the radar goes anywhere near the car. Changing the ID means sending the radar's config frame. A release panda blocks that frame, including the one in the comma device. Use a USB-CAN adapter that python-can supports (for example CANable, PCAN or gs_usb), at 500 kbit/s. The commands below are for an slcan adapter such as a CANable with stock firmware; for candleLight firmware use `--interface gs_usb` and `python-can[gs_usb]`, which also needs libusb (`brew install libusb` on macOS). Power the radar from a 12 V bench supply, and terminate the bus with 120 Ω at each end.
+Do this before the radar goes anywhere near the car. Changing the ID means sending the radar's config frame. A release panda blocks that frame, including the one in the comma device. Use a USB-CAN adapter that python-can supports (for example CANable, PCAN or gs_usb), at 500 kbit/s. The commands below are for an slcan adapter such as a CANable with stock firmware; for candleLight firmware use `--interface gs_usb` and `python-can[gs_usb]`, which also needs libusb (`brew install libusb` on macOS). Power the radar from a 12 V supply with at least 1 A available, not from the adapter's 5 V output, which is too low: the radar then sends only an empty list header about twice a second. If the adapter is isolated, tie the supply's ground to the adapter's CAN ground. Connect everything before switching on, because the radar doesn't support hot swapping, and check polarity, because it has no reverse-polarity protection. Terminate the bus with 120 Ω at the adapter.
 
 ```sh
-uv run --with "python-can[serial]" tools/scripts/car/mr76_config.py --interface slcan --channel /dev/tty.usbmodem1101 scan
-uv run --with "python-can[serial]" tools/scripts/car/mr76_config.py --interface slcan --channel /dev/tty.usbmodem1101 set-id 2
+uv run --no-project --with "python-can[serial]" tools/scripts/car/mr76_config.py --interface slcan --channel /dev/tty.usbmodem1101 scan
+uv run --no-project --with "python-can[serial]" tools/scripts/car/mr76_config.py --interface slcan --channel /dev/tty.usbmodem1101 set-id 2
 ```
 
 - `scan` lists every radar it hears, with its sensor ID, maximum distance, output type and sort order.
+- `watch` shows what the radar sees, live, without sending anything. Moving objects are listed first. Add `--log file.log` to also save every frame in candump format.
 - `set-id` shows the frame and asks you to type OK before it sends anything. It then checks that the radar comes back at the new ID and has saved it.
 
 Power-cycle the radar and run `scan` again to confirm the new ID stuck.
@@ -37,9 +38,9 @@ Power-cycle the radar and run `scan` again to confirm the new ID stuck.
 ## 2. Wire and mount it
 
 - **Bus:** use a CAN bus the car leaves free if you can. Before wiring, record a drive and confirm in Cabana that the bus is silent. On the 2018–2021 Bolt with a beartech GM harness, CAN1 is free (beartech confirmed this); ask your harness vendor for the pinout. Use a twisted pair for CAN H/L and keep stubs short.
-- **Termination:** with everything off, measure between CAN H and CAN L on the finished bus. About 60 Ω is right. About 120 Ω means one end has no terminator; add 120 Ω at the radar end.
+- **Termination:** the bus needs 120 Ω at each end, about 60 Ω across CAN H and CAN L in total. The MR76 manual warns against putting a multimeter on the radar's pins and doesn't say whether it terminates internally, so ask the seller or Nanoradar. Meter only the car side, with the radar unplugged and everything off: about 120 Ω means that end is already terminated, and open means it needs 120 Ω.
 - **Power:** use a fused circuit that switches with the ignition. The radar draws about 0.3 A at 12 V.
-- **Mounting:** mount it centered and level, facing straight ahead. Put it behind plastic, never behind metal or metallic paint. Measure the following and enter them in Galaxy:
+- **Mounting:** mount it centered and level, facing straight ahead, with the connector on the left as seen from behind looking forward. Lateral readings flip if it's turned over; **Mounted Upside Down** corrects that. Put it behind plastic, never behind metal or metallic paint. Measure the following and enter them in Galaxy:
   - **Forward Offset:** meters from the front bumper to the radar, negative if it sits behind the bumper face.
   - **Lateral Offset:** meters left of the car's centerline, negative to the right.
   - **Yaw:** degrees the radar points left of straight ahead.
