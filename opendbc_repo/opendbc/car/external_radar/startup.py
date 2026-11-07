@@ -6,17 +6,22 @@ some modules only transmit while driving, which a full-drive capture should conf
 The radar usually powers up with the car, so its own output is in the fingerprint too
 and is not counted as the car's.
 """
-from opendbc.dbc.generator.nanoradar.nanoradar_mr76 import OBJ_GENERAL, OBJ_LIST_STATUS, SENSOR_IDS, address
+from opendbc.dbc.generator.nanoradar.nanoradar_mr76 import OBJ_GENERAL, OBJ_LIST_STATUS, RADAR_STATE, SENSOR_IDS, SW_VERSION, address
 
-# Every MR76 base address (MR76_Radar driver message list, plus the object quality and
-# extended IDs that the config frame can enable). Inputs would reconfigure the radar if a
-# car module sent them; outputs could confuse a car module listening on that address.
+# Every MR76 base address (MR76_Radar driver message list, the object quality and extended
+# IDs that the config frame can enable, and what a real radar sent on the bench). Inputs
+# would reconfigure the radar if a car module sent them; outputs could confuse a car module
+# listening on that address.
 MR76_ADDRESSES = {
   0x200: "RadarCfg (radar input)",
   0x201: "RadarState",
-  0x400: "CollDetCfg (radar input)",
-  0x401: "CollDetRegionCfg (radar input)",
+  0x400: "CollDetCfg",
+  0x401: "CollDetRegionCfg",
   0x402: "CollDetRegionState",
+  0x403: "Boot report",
+  0x404: "Boot report",
+  0x405: "Boot report",
+  0x406: "Boot report",
   0x408: "CollDetState",
   0x60A: "ObjListStatus",
   0x60B: "ObjGeneral",
@@ -25,7 +30,9 @@ MR76_ADDRESSES = {
   0x60E: "ObjCollWarning",
   0x700: "SwVersion",
 }
-RADAR_INPUTS = {0x200, 0x400, 0x401}
+# The radar never sends these. It does send 0x400-0x406 itself, once, about 2 s after power-on.
+RADAR_INPUTS = {0x200}
+EVERY_MR76_ADDRESS = frozenset(address(base, i) for base in MR76_ADDRESSES for i in SENSOR_IDS)
 
 
 def ineligible_reason(cp) -> str | None:
@@ -40,12 +47,16 @@ def ineligible_reason(cp) -> str | None:
 
 
 def radar_sensor_ids(fingerprints: dict[int, dict[int, int]], bus: int) -> frozenset[int]:
-  """Sensor IDs whose 60 ms object cycle (list header and object frames) is in the fingerprint.
+  """Sensor IDs whose own output is in the fingerprint.
 
-  An MR76 powers up with the car, so its own output usually lands in the startup fingerprint.
+  An MR76 powers up with the car, so it usually lands in the startup fingerprint. That short
+  window can catch it early, when it has no objects yet and its list header may be all there is:
+  a header counts if another of its regular messages is there, or nothing else is on the bus.
   """
   seen = fingerprints.get(bus, {})
-  return frozenset(i for i in SENSOR_IDS if all(seen.get(address(base, i)) == 8 for base in (OBJ_LIST_STATUS, OBJ_GENERAL)))
+  only_radar = EVERY_MR76_ADDRESS.issuperset(seen)
+  return frozenset(i for i in SENSOR_IDS if seen.get(address(OBJ_LIST_STATUS, i)) == 8 and
+                   (only_radar or any(seen.get(address(base, i)) == 8 for base in (OBJ_GENERAL, RADAR_STATE, SW_VERSION))))
 
 
 def occupied_addresses(fingerprints: dict[int, dict[int, int]], bus: int) -> frozenset[int]:
