@@ -257,7 +257,7 @@ def test_reviewed_vision_addition_does_not_allow_other_schema_changes(historical
   ('toyotaCruise @38 :ToyotaCruise;', 'toyotaCruise @38 :StarPilotCarControl.SteeringLimitInfo;'),
   ('steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo;', 'steeringLimitInfo @39 :StarPilotCarState.Gps;'),
   ('steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo;',
-   'steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo; unreviewed @40 :Bool;'),
+   'steeringLimitInfo @39 :StarPilotCarControl.SteeringLimitInfo; unreviewed @41 :Bool;'),
 ])
 def test_reviewed_steering_addition_does_not_allow_other_schema_changes(historical, tmp_path, before, after):
   source = Path(CEREAL_PATH, 'custom.capnp').read_text()
