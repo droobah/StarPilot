@@ -22,8 +22,8 @@ FOREIGN_HEADERS_FOR_MISMATCH = 20  # about 1 s of another sensor ID's cycle head
 PUBLISH_EVERY = 5  # 20 Hz at card's 100 Hz, the RadarInterfaceBase cadence
 TRACK_JUMP_M = 5.0  # an MR76 object ID reused for a different object
 
-# The MR76 reports DistLat positive to the right. openpilot's yRel is positive to the left.
-# Confirm on the bench before active use.
+# The MR76 reports DistLat positive to the right, away from its connector (confirmed on the bench).
+# openpilot's yRel is positive to the left.
 LATERAL_SIGN = -1.0
 DYN_PROP_ONCOMING = 2
 

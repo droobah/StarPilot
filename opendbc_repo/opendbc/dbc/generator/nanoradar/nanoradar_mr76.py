@@ -4,11 +4,14 @@
 Every MR76 address is shifted by 0x10 * sensor ID, so each sensor ID gets its
 own DBC: nanoradar_mr76_s<id>_generated.
 
-Layouts follow the BSD-3 MR76_Radar driver (github.com/MoradSayed/MR76_Radar),
-which lists each Motorola signal by its least significant bit. They are
-converted here to the DBC convention, where a Motorola start bit is the most
-significant bit. Object quality (0x60C) and extended (0x60D) messages are left
-out until a capture or the vendor protocol manual confirms their layout.
+Layouts follow the vendor's MR76 Communication Protocol and the
+BSD-3 MR76_Radar driver (github.com/MoradSayed/MR76_Radar), and were
+confirmed on frames from a real radar. Both list each Motorola signal by its
+least significant bit; they are converted here to the DBC convention, where a
+Motorola start bit is the most significant bit. The MR76 has no object quality
+(0x60C) or extended (0x60D) messages. The collision detection messages
+(0x400-0x402, 0x408, 0x60E) are left out because nothing here turns that
+feature on.
 """
 
 SENSOR_IDS = range(8)
@@ -87,7 +90,7 @@ VALUES = {
   },
   "ObjGeneral": {
     "DynProp": {0: "moving", 1: "stationary", 2: "oncoming", 3: "crossing_left", 4: "crossing_right", 5: "unknown", 6: "stopped"},
-    "Class": {0: "point", 1: "vehicle"},
+    "Class": {0: "point", 1: "vehicle", 2: "reserved_2", 3: "reserved_3"},
   },
 }
 
